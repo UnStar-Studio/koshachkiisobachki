@@ -1,47 +1,54 @@
-﻿<html>
+﻿<!DOCTYPE html>
+<html>
 <head>
-    <title>Koshechki Sobachki</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Снимок с камеры</title>
 </head>
-<h1>Автоматическое создание снимка</h1>
+<body>
+    <button id="takePicture">Сделать снимок</button>
+    <canvas id="canvas"></canvas>
 
-<!-- Элемент canvas для создания фотографии -->
-<canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+        const video = document.createElement('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const takePictureButton = document.getElementById('takePicture');
 
-<!-- Видеоэлемент для отображения потока с камеры -->
-<video id="video" width="640" height="480" autoplay></video>
+        takePictureButton.addEventListener('click', takePicture);
 
-<script>
-    // Получение элементов DOM
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
+        function handleSuccess(stream) {
+            video.srcObject = stream;
+            video.play();
+        }
 
-    // Запуск функции при загрузке страницы
-    window.addEventListener('load', startCamera);
+        function handleError(error) {
+            console.error('Ошибка доступа к камере:', error);
+        }
 
-    function startCamera() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-            .then(stream => {
-                video.srcObject = stream;
+        function takePicture() {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png'); //получаем данные изображения
 
-                // Делаем снимок через 3 секунды после загрузки страницы
-                setTimeout(() => takeSnapshot(), 3000);
-            })
-            .catch(error => console.error('Ошибка доступа к камере:', error));
-    }
+            //Обработка imageData (например, отправка на сервер)
+            console.log("ImageData:", imageData);
+            //Пример отправки на сервер:
+            //fetch('/upload', {method: 'POST', body: JSON.stringify({imageData: imageData})})
+            // .then(response => response.json())
+            // .then(data => console.log('Success:', data))
+            // .catch((error) => {
+            //   console.error('Error:', error);
+            // });
+        }
 
-    function takeSnapshot() {
-        // Копируем кадр из видеопотока на холст
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Получаем данные изображения в формате base64
-        const imageDataURL = canvas.toDataURL('image/png');
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }) //facingMode: "user" для фронтальной камеры
+                .then(handleSuccess)
+                .catch(handleError);
+        } else {
+            console.log('getUserMedia не поддерживается этим браузером.');
+        }
 
-        // Здесь вы можете сохранить изображение на сервер или обработать его другим способом
-        console.log(imageDataURL); // Выводим URL изображения в консоль
-    }
-</script>
-<script src="script.js"></script>
-    </body>
+    </script>
+
+</body>
 </html>
